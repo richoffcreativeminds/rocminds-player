@@ -15,7 +15,7 @@
   }
   .player {
     width: 100%;
-    max-width: 500px;
+    max-width: 420px;
     background: #0a0a0a;
     border-radius: 20px;
     overflow: hidden;
@@ -211,23 +211,19 @@
 
 <script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
- // 1. Get URL parameters dynamically & safely decode
+  // Get track URL parameter
   const urlParams = new URLSearchParams(window.location.search);
   const rawParam = urlParams.get('url');
-  
-  // Safely decode if encoded, or use as-is if already raw
-  let targetTrackUrl = "https://soundcloud.com/rich-off-creative-minds/want-what-i-want-gunna-remix";
+  let targetUrl = "https://soundcloud.com/rich-off-creative-minds/want-what-i-want-gunna-remix";
   if (rawParam) {
-    try {
-      targetTrackUrl = decodeURIComponent(rawParam);
-    } catch(e) {
-      targetTrackUrl = rawParam;
-    }
+    try { targetUrl = decodeURIComponent(rawParam); } catch(e) { targetUrl = rawParam; }
   }
 
-  // 2. Set the dynamic iframe src before initializing widget
   const iframe = document.getElementById('sc-iframe');
-  iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(targetTrackUrl)}&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false&callback=true`;
+  
+  // Set initial iframe src using standard embed formatting
+  iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(targetUrl)}&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false`;
+
   const widget = SC.Widget(iframe);
   let duration = 0, tracks = [], currentIndex = 0;
 
@@ -252,8 +248,7 @@
   function buildList(sounds) {
     const list = document.getElementById('track-list');
     list.innerHTML = '';
-    // Hide track list if it's only a single track
-    if (sounds.length <= 1) {
+    if (!sounds || sounds.length <= 1) {
       list.style.display = 'none';
       return;
     }
@@ -271,23 +266,55 @@
     });
   }
 
+  // Handle widget initialisation safely
   widget.bind(SC.Widget.Events.READY, () => {
-    widget.getSounds(sounds => {
-      tracks = sounds;
-      if (sounds && sounds.length) { 
-        buildList(sounds); 
-        updateUI(sounds[0]); 
+    widget.getCurrentSound(sound => {
+      if (sound) {
+        updateUI(sound);
+        document.getElementById('loading').style.display = 'none';
       } else {
-        widget.getCurrentSound(sound => { if (sound) updateUI(sound); });
+        // If initial load returned empty (due to private token), fetch via SoundCloud OEmbed API
+        fetch(`https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(targetUrl)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.html) {
+              const srcMatch = data.html.match(/src="([^"]+)"/);
+              if (srcMatch && srcMatch[1]) {
+                widget.load(srcMatch[1], {
+                  auto_play: false,
+                  show_artwork: false,
+                  callback: () => {
+                    widget.getCurrentSound(s => {
+                      if (s) updateUI(s);
+                      document.getElementById('loading').style.display = 'none';
+                    });
+                  }
+                });
+              }
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            document.getElementById('loading').style.display = 'none';
+          });
       }
-      document.getElementById('loading').style.display = 'none';
+    });
+
+    widget.getSounds(sounds => {
+      if (sounds && sounds.length > 1) {
+        tracks = sounds;
+        buildList(sounds);
+      }
     });
   });
 
   widget.bind(SC.Widget.Events.PLAY, () => {
     document.getElementById('icon-play').style.display = 'none';
     document.getElementById('icon-pause').style.display = 'block';
-    widget.getCurrentSoundIndex(i => { currentIndex = i; if (tracks[i]) updateUI(tracks[i]); });
+    widget.getCurrentSoundIndex(i => { 
+      currentIndex = i; 
+      if (tracks[i]) updateUI(tracks[i]); 
+    });
   });
 
   widget.bind(SC.Widget.Events.PAUSE, () => {
