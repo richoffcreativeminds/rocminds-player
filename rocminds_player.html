@@ -6,7 +6,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   
   html, body {
-    background: #000;
+    background: transparent;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
     color: #fff;
     width: 100%;
@@ -17,12 +17,13 @@
   .player {
     width: 100%;
     height: 100vh;
-    background: #0a0a0a;
+    background: transparent;
     border-radius: 0;
     overflow: hidden;
     position: relative;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
   }
   
   #sc-iframe {
@@ -30,14 +31,15 @@
     position: absolute; opacity: 0; pointer-events: none;
   }
   
-  /* Flex: 1 lets the hero image fill available height while preserving controls below */
+  /* Artwork sits as an absolute full-screen background */
   .art-hero {
-    position: relative;
+    position: absolute;
+    inset: 0;
     width: 100%;
-    flex: 1;
-    min-height: 200px;
+    height: 100%;
     overflow: hidden;
-    background: #111;
+    background: #000;
+    z-index: 1;
   }
   
   .art-hero img {
@@ -46,35 +48,41 @@
     transition: opacity 0.4s;
   }
   
+  /* Gradient overlay for text contrast at the bottom */
   .art-hero-overlay {
     position: absolute; inset: 0;
-    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.9) 100%);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.85) 100%);
   }
   
   .art-hero-text {
-    position: absolute;
-    bottom: 16px; left: 20px; right: 20px;
+    position: relative;
+    z-index: 2;
+    padding: 0 20px 12px;
   }
   
   .track-title {
     font-size: 20px; font-weight: 700;
     letter-spacing: -0.3px; line-height: 1.2;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
   }
   
   .track-artist {
-    font-size: 13px; color: rgba(255,255,255,0.55);
+    font-size: 13px; color: rgba(255,255,255,0.7);
     margin-top: 4px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
   }
   
-  /* flex-shrink: 0 prevents controls and timeline from getting cut off */
+  /* Floating elements layered over background */
   .progress-section { 
-    padding: 12px 20px 0; 
+    padding: 8px 20px 0; 
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
   }
   
   .progress-bar-wrap {
     width: 100%; height: 3px;
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.25);
     border-radius: 2px; cursor: pointer; position: relative;
   }
   
@@ -94,7 +102,7 @@
   .time-row {
     display: flex; justify-content: space-between;
     margin-top: 8px;
-    font-size: 11px; color: rgba(255,255,255,0.4);
+    font-size: 11px; color: rgba(255,255,255,0.6);
     font-variant-numeric: tabular-nums;
   }
   
@@ -103,11 +111,13 @@
     justify-content: space-between;
     padding: 12px 32px 16px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
   }
   
   .ctrl-btn {
     background: none; border: none; cursor: pointer;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255,255,255,0.85);
     display: flex; align-items: center; justify-content: center;
     transition: color 0.2s, transform 0.1s; padding: 8px;
   }
@@ -119,16 +129,19 @@
     width: 56px; height: 56px;
     background: #fff; border-radius: 50%;
     color: #000;
-    box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
   }
   
   .ctrl-btn.play-pause:hover { background: #eee; color: #000; }
   
   .track-list {
-    border-top: 1px solid rgba(255,255,255,0.07);
+    border-top: 1px solid rgba(255,255,255,0.12);
     max-height: 150px; overflow-y: auto;
     scrollbar-width: none;
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    background: rgba(0,0,0,0.2);
   }
   
   .track-list::-webkit-scrollbar { display: none; }
@@ -137,18 +150,18 @@
     display: flex; align-items: center;
     padding: 10px 20px; gap: 12px;
     cursor: pointer; transition: background 0.15s;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
   
-  .track-item:hover { background: rgba(255,255,255,0.05); }
-  .track-item.active { background: rgba(26,122,58,0.1); }
+  .track-item:hover { background: rgba(255,255,255,0.1); }
+  .track-item.active { background: rgba(26,122,58,0.25); }
   
   .track-num {
-    font-size: 12px; color: rgba(255,255,255,0.3);
+    font-size: 12px; color: rgba(255,255,255,0.5);
     width: 18px; text-align: center; flex-shrink: 0;
   }
   
-  .track-item.active .track-num { color: #1a7a3a; }
+  .track-item.active .track-num { color: #23a04c; }
   
   .track-thumb {
     width: 36px; height: 36px;
@@ -164,27 +177,29 @@
     text-overflow: ellipsis; color: #fff;
   }
   
-  .track-item.active .track-name { color: #1a7a3a; }
+  .track-item.active .track-name { color: #23a04c; }
   
   .track-dur {
-    font-size: 11px; color: rgba(255,255,255,0.35);
+    font-size: 11px; color: rgba(255,255,255,0.5);
     flex-shrink: 0; font-variant-numeric: tabular-nums;
   }
   
   .player-footer {
     padding: 8px 20px 12px;
     display: flex; align-items: center; justify-content: space-between;
-    border-top: 1px solid rgba(255,255,255,0.07);
+    border-top: 1px solid rgba(255,255,255,0.12);
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
   }
   
   .rocm-brand {
     font-size: 10px; font-weight: 700;
-    letter-spacing: 2px; color: rgba(255,255,255,0.25);
+    letter-spacing: 2px; color: rgba(255,255,255,0.4);
     text-transform: uppercase;
   }
   
-  .sc-credit { font-size: 10px; color: rgba(255,255,255,0.2); }
+  .sc-credit { font-size: 10px; color: rgba(255,255,255,0.35); }
   
   .loading-overlay {
     position: absolute; inset: 0;
@@ -220,10 +235,11 @@
   <div class="art-hero">
     <img id="art-img" src="" alt="Album Art">
     <div class="art-hero-overlay"></div>
-    <div class="art-hero-text">
-      <div class="track-title" id="track-title">Loading...</div>
-      <div class="track-artist" id="track-artist">ROCMINDS</div>
-    </div>
+  </div>
+
+  <div class="art-hero-text">
+    <div class="track-title" id="track-title">Loading...</div>
+    <div class="track-artist" id="track-artist">ROCMINDS</div>
   </div>
 
   <div class="progress-section">
