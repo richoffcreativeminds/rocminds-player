@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .player {
+    width: 100%;
+    max-width: 420px;
+    background: #0a0a0a;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+  #sc-iframe {
+    width: 1px; height: 1px;
+    position: absolute; opacity: 0; pointer-events: none;
+  }
+  .art-hero {
+    position: relative;
+    width: 100%; aspect-ratio: 1;
+    overflow: hidden; background: #111;
+  }
+  .art-hero img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    transition: opacity 0.4s;
+  }
+  .art-hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.9) 100%);
+  }
+  .art-hero-text {
+    position: absolute;
+    bottom: 20px; left: 20px; right: 20px;
+  }
+  .track-title {
+    font-size: 20px; font-weight: 700;
+    letter-spacing: -0.3px; line-height: 1.2;
+  }
+  .track-artist {
+    font-size: 13px; color: rgba(255,255,255,0.55);
+    margin-top: 4px;
+  }
+  .progress-section { padding: 16px 20px 0; }
+  .progress-bar-wrap {
+    width: 100%; height: 3px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px; cursor: pointer; position: relative;
+  }
+  .progress-fill {
+    height: 100%; background: #1a7a3a;
+    border-radius: 2px; width: 0%;
+    transition: width 0.5s linear; position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute; right: -5px; top: -4px;
+    width: 11px; height: 11px;
+    background: #fff; border-radius: 50%;
+  }
+  .time-row {
+    display: flex; justify-content: space-between;
+    margin-top: 8px;
+    font-size: 11px; color: rgba(255,255,255,0.4);
+    font-variant-numeric: tabular-nums;
+  }
+  .controls {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px 20px;
+  }
+  .ctrl-btn {
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.7);
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s, transform 0.1s; padding: 8px;
+  }
+  .ctrl-btn:hover { color: #fff; }
+  .ctrl-btn:active { transform: scale(0.9); }
+  .ctrl-btn.play-pause {
+    width: 60px; height: 60px;
+    background: #fff; border-radius: 50%;
+    color: #000;
+    box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+  }
+  .ctrl-btn.play-pause:hover { background: #eee; color: #000; }
+  .track-list {
+    border-top: 1px solid rgba(255,255,255,0.07);
+    max-height: 200px; overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .track-list::-webkit-scrollbar { display: none; }
+  .track-item {
+    display: flex; align-items: center;
+    padding: 10px 20px; gap: 12px;
+    cursor: pointer; transition: background 0.15s;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .track-item:hover { background: rgba(255,255,255,0.05); }
+  .track-item.active { background: rgba(26,122,58,0.1); }
+  .track-num {
+    font-size: 12px; color: rgba(255,255,255,0.3);
+    width: 18px; text-align: center; flex-shrink: 0;
+  }
+  .track-item.active .track-num { color: #1a7a3a; }
+  .track-thumb {
+    width: 36px; height: 36px;
+    border-radius: 4px; object-fit: cover;
+    background: #222; flex-shrink: 0;
+  }
+  .track-info { flex: 1; min-width: 0; }
+  .track-name {
+    font-size: 13px; font-weight: 500;
+    white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; color: #fff;
+  }
+  .track-item.active .track-name { color: #1a7a3a; }
+  .track-dur {
+    font-size: 11px; color: rgba(255,255,255,0.35);
+    flex-shrink: 0; font-variant-numeric: tabular-nums;
+  }
+  .player-footer {
+    padding: 10px 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.07);
+  }
+  .rocm-brand {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+  }
+  .sc-credit { font-size: 10px; color: rgba(255,255,255,0.2); }
+  .loading-overlay {
+    position: absolute; inset: 0;
+    background: #0a0a0a;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10; flex-direction: column; gap: 12px;
+    border-radius: 20px;
+  }
+  .loading-dot {
+    width: 8px; height: 8px;
+    background: #1a7a3a; border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+  .loading-text { font-size: 12px; color: rgba(255,255,255,0.4); }
+</style>
+</head>
+<body>
+
+<div class="player">
+  <div class="loading-overlay" id="loading">
+    <div class="loading-dot"></div>
+    <div class="loading-text">Loading...</div>
+  </div>
+
+  <iframe id="sc-iframe"
+    src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/rich-off-creative-minds/want-what-i-want-gunna-remix&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false&callback=true">
+  </iframe>
+
+  <div class="art-hero">
+    <img id="art-img" src="" alt="Album Art">
+    <div class="art-hero-overlay"></div>
+    <div class="art-hero-text">
+      <div class="track-title" id="track-title">Loading...</div>
+      <div class="track-artist" id="track-artist">ROCMINDS</div>
+    </div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-bar-wrap" id="progress-wrap">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="time-row">
+      <span id="time-current">0:00</span>
+      <span id="time-total">0:00</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl-btn" id="btn-prev">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+    </button>
+    <button class="ctrl-btn play-pause" id="btn-play">
+      <svg id="icon-play" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <svg id="icon-pause" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    </button>
+    <button class="ctrl-btn" id="btn-next">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18 14.5 12 6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+    </button>
+  </div>
+
+  <div class="track-list" id="track-list"></div>
+
+  <div class="player-footer">
+    <span class="rocm-brand">ROCMINDS</span>
+    <span class="sc-credit">via SoundCloud</span>
+  </div>
+</div>
+
+<script src="https://w.soundcloud.com/player/api.js"></script>
+<script>
+  const iframe = document.getElementById('sc-iframe');
+  const widget = SC.Widget(iframe);
+  let duration = 0, tracks = [], currentIndex = 0;
+
+  function fmt(ms) {
+    const s = Math.floor(ms / 1000);
+    return Math.floor(s/60) + ':' + (s%60 < 10 ? '0' : '') + s%60;
+  }
+
+  function updateUI(sound) {
+    document.getElementById('track-title').textContent = sound.title || '';
+    document.getElementById('track-artist').textContent = sound.user?.username || 'ROCMINDS';
+    if (sound.artwork_url) {
+      document.getElementById('art-img').src = sound.artwork_url.replace('-large', '-t500x500');
+    }
+    duration = sound.duration || 0;
+    document.getElementById('time-total').textContent = fmt(duration);
+    document.querySelectorAll('.track-item').forEach((el, i) => {
+      el.classList.toggle('active', i === currentIndex);
+    });
+  }
+
+  function buildList(sounds) {
+    const list = document.getElementById('track-list');
+    list.innerHTML = '';
+    sounds.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = 'track-item' + (i === 0 ? ' active' : '');
+      el.innerHTML = `
+        <span class="track-num">${i + 1}</span>
+        <img class="track-thumb" src="${s.artwork_url ? s.artwork_url.replace('-large','-small') : ''}" alt="">
+        <div class="track-info"><div class="track-name">${s.title}</div></div>
+        <span class="track-dur">${fmt(s.duration)}</span>`;
+      el.addEventListener('click', () => { widget.skip(i); widget.play(); });
+      list.appendChild(el);
+    });
+  }
+
+  widget.bind(SC.Widget.Events.READY, () => {
+    widget.getSounds(sounds => {
+      tracks = sounds;
+      if (sounds.length) { buildList(sounds); updateUI(sounds[0]); }
+      document.getElementById('loading').style.display = 'none';
+    });
+  });
+
+  widget.bind(SC.Widget.Events.PLAY, () => {
+    document.getElementById('icon-play').style.display = 'none';
+    document.getElementById('icon-pause').style.display = 'block';
+    widget.getCurrentSoundIndex(i => { currentIndex = i; if (tracks[i]) updateUI(tracks[i]); });
+  });
+
+  widget.bind(SC.Widget.Events.PAUSE, () => {
+    document.getElementById('icon-play').style.display = 'block';
+    document.getElementById('icon-pause').style.display = 'none';
+  });
+
+  widget.bind(SC.Widget.Events.PLAY_PROGRESS, e => {
+    const pct = duration > 0 ? (e.currentPosition / duration) * 100 : 0;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('time-current').textContent = fmt(e.currentPosition);
+  });
+
+  document.getElementById('btn-play').addEventListener('click', () => widget.toggle());
+  document.getElementById('btn-prev').addEventListener('click', () => widget.prev());
+  document.getElementById('btn-next').addEventListener('click', () => widget.next());
+  document.getElementById('progress-wrap').addEventListener('click', e => {
+    const r = e.currentTarget.getBoundingClientRect();
+    widget.seekTo(((e.clientX - r.left) / r.width) * duration);
+  });
+</script>
+</body>
+</html>
