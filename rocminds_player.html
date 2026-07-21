@@ -4,162 +4,206 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
- body {
+  
+  html, body {
     background: #000;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
     color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    width: 100vw;       /* Ensures body fills the full viewport width */
-    overflow-x: hidden;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
   }
   
   .player {
     width: 100%;
-    max-width: 100%;    /* Change from 420px to 100% so it stretches completely */
+    height: 100vh;
     background: #0a0a0a;
-    border-radius: 0;   /* Change from 20px to 0 for a seamless edge-to-edge fit */
+    border-radius: 0;
     overflow: hidden;
     position: relative;
-    min-height: 100vh;  /* Fills vertically as well if desired */
+    display: flex;
+    flex-direction: column;
   }
+  
   #sc-iframe {
     width: 1px; height: 1px;
     position: absolute; opacity: 0; pointer-events: none;
   }
+  
+  /* Flex: 1 lets the hero image fill available height while preserving controls below */
   .art-hero {
     position: relative;
-    width: 100%; aspect-ratio: 1;
-    overflow: hidden; background: #111;
+    width: 100%;
+    flex: 1;
+    min-height: 200px;
+    overflow: hidden;
+    background: #111;
   }
+  
   .art-hero img {
     width: 100%; height: 100%;
     object-fit: cover; display: block;
     transition: opacity 0.4s;
   }
+  
   .art-hero-overlay {
     position: absolute; inset: 0;
     background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.9) 100%);
   }
+  
   .art-hero-text {
     position: absolute;
-    bottom: 20px; left: 20px; right: 20px;
+    bottom: 16px; left: 20px; right: 20px;
   }
+  
   .track-title {
     font-size: 20px; font-weight: 700;
     letter-spacing: -0.3px; line-height: 1.2;
   }
+  
   .track-artist {
     font-size: 13px; color: rgba(255,255,255,0.55);
     margin-top: 4px;
   }
-  .progress-section { padding: 16px 20px 0; }
+  
+  /* flex-shrink: 0 prevents controls and timeline from getting cut off */
+  .progress-section { 
+    padding: 12px 20px 0; 
+    flex-shrink: 0;
+  }
+  
   .progress-bar-wrap {
     width: 100%; height: 3px;
     background: rgba(255,255,255,0.15);
     border-radius: 2px; cursor: pointer; position: relative;
   }
+  
   .progress-fill {
     height: 100%; background: #1a7a3a;
     border-radius: 2px; width: 0%;
     transition: width 0.5s linear; position: relative;
   }
+  
   .progress-fill::after {
     content: '';
     position: absolute; right: -5px; top: -4px;
     width: 11px; height: 11px;
     background: #fff; border-radius: 50%;
   }
+  
   .time-row {
     display: flex; justify-content: space-between;
     margin-top: 8px;
     font-size: 11px; color: rgba(255,255,255,0.4);
     font-variant-numeric: tabular-nums;
   }
+  
   .controls {
     display: flex; align-items: center;
     justify-content: space-between;
-    padding: 16px 32px 20px;
+    padding: 12px 32px 16px;
+    flex-shrink: 0;
   }
+  
   .ctrl-btn {
     background: none; border: none; cursor: pointer;
     color: rgba(255,255,255,0.7);
     display: flex; align-items: center; justify-content: center;
     transition: color 0.2s, transform 0.1s; padding: 8px;
   }
+  
   .ctrl-btn:hover { color: #fff; }
   .ctrl-btn:active { transform: scale(0.9); }
+  
   .ctrl-btn.play-pause {
-    width: 60px; height: 60px;
+    width: 56px; height: 56px;
     background: #fff; border-radius: 50%;
     color: #000;
     box-shadow: 0 4px 20px rgba(255,255,255,0.1);
   }
+  
   .ctrl-btn.play-pause:hover { background: #eee; color: #000; }
+  
   .track-list {
     border-top: 1px solid rgba(255,255,255,0.07);
-    max-height: 200px; overflow-y: auto;
+    max-height: 150px; overflow-y: auto;
     scrollbar-width: none;
+    flex-shrink: 0;
   }
+  
   .track-list::-webkit-scrollbar { display: none; }
+  
   .track-item {
     display: flex; align-items: center;
     padding: 10px 20px; gap: 12px;
     cursor: pointer; transition: background 0.15s;
     border-bottom: 1px solid rgba(255,255,255,0.04);
   }
+  
   .track-item:hover { background: rgba(255,255,255,0.05); }
   .track-item.active { background: rgba(26,122,58,0.1); }
+  
   .track-num {
     font-size: 12px; color: rgba(255,255,255,0.3);
     width: 18px; text-align: center; flex-shrink: 0;
   }
+  
   .track-item.active .track-num { color: #1a7a3a; }
+  
   .track-thumb {
     width: 36px; height: 36px;
     border-radius: 4px; object-fit: cover;
     background: #222; flex-shrink: 0;
   }
+  
   .track-info { flex: 1; min-width: 0; }
+  
   .track-name {
     font-size: 13px; font-weight: 500;
     white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; color: #fff;
   }
+  
   .track-item.active .track-name { color: #1a7a3a; }
+  
   .track-dur {
     font-size: 11px; color: rgba(255,255,255,0.35);
     flex-shrink: 0; font-variant-numeric: tabular-nums;
   }
+  
   .player-footer {
-    padding: 10px 20px 14px;
+    padding: 8px 20px 12px;
     display: flex; align-items: center; justify-content: space-between;
     border-top: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
   }
+  
   .rocm-brand {
     font-size: 10px; font-weight: 700;
     letter-spacing: 2px; color: rgba(255,255,255,0.25);
     text-transform: uppercase;
   }
+  
   .sc-credit { font-size: 10px; color: rgba(255,255,255,0.2); }
+  
   .loading-overlay {
     position: absolute; inset: 0;
     background: #0a0a0a;
     display: flex; align-items: center; justify-content: center;
     z-index: 10; flex-direction: column; gap: 12px;
-    border-radius: 20px;
   }
+  
   .loading-dot {
     width: 8px; height: 8px;
     background: #1a7a3a; border-radius: 50%;
     animation: pulse 1.2s ease-in-out infinite;
   }
+  
   @keyframes pulse {
     0%, 100% { opacity: 0.2; transform: scale(0.8); }
     50% { opacity: 1; transform: scale(1.2); }
   }
+  
   .loading-text { font-size: 12px; color: rgba(255,255,255,0.4); }
 </style>
 </head>
@@ -224,8 +268,6 @@
   }
 
   const iframe = document.getElementById('sc-iframe');
-  
-  // Set initial iframe src using standard embed formatting
   iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(targetUrl)}&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false`;
 
   const widget = SC.Widget(iframe);
@@ -270,14 +312,12 @@
     });
   }
 
-  // Handle widget initialisation safely
   widget.bind(SC.Widget.Events.READY, () => {
     widget.getCurrentSound(sound => {
       if (sound) {
         updateUI(sound);
         document.getElementById('loading').style.display = 'none';
       } else {
-        // If initial load returned empty (due to private token), fetch via SoundCloud OEmbed API
         fetch(`https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(targetUrl)}`)
           .then(res => res.json())
           .then(data => {
