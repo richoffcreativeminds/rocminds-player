@@ -45,7 +45,6 @@
     z-index: 1;
   }
   
-  /* Force image to cover 100% of height and width */
   .art-hero img {
     width: 100% !important;
     height: 100% !important;
@@ -295,13 +294,17 @@
 
   function updateUI(sound) {
     if (!sound) return;
-    document.getElementById('track-title').textContent = sound.title || '';
+    if (sound.title && sound.title !== 'undefined') {
+      document.getElementById('track-title').textContent = sound.title;
+    }
     document.getElementById('track-artist').textContent = sound.user?.username || 'ROCMINDS';
     if (sound.artwork_url) {
       document.getElementById('art-img').src = sound.artwork_url.replace('-large', '-t500x500');
     }
     duration = sound.duration || 0;
-    document.getElementById('time-total').textContent = fmt(duration);
+    if (duration > 0) {
+      document.getElementById('time-total').textContent = fmt(duration);
+    }
     document.querySelectorAll('.track-item').forEach((el, i) => {
       el.classList.toggle('active', i === currentIndex);
     });
@@ -313,7 +316,7 @@
       if (sound.title && sound.title !== 'undefined') {
         row.querySelector('.track-name').textContent = sound.title;
       }
-      if (sound.duration) {
+      if (sound.duration && !isNaN(sound.duration)) {
         row.querySelector('.track-dur').textContent = fmt(sound.duration);
       }
       if (sound.artwork_url) {
@@ -339,8 +342,8 @@
       el.className = 'track-item' + (i === currentIndex ? ' active' : '');
       el.id = `track-item-${i}`;
       
-      const title = (s.title && s.title !== 'undefined') ? s.title : `Track ${i + 1}`;
-      const dur = fmt(s.duration);
+      const title = (s.title && s.title !== 'undefined') ? s.title : 'Loading track...';
+      const dur = (s.duration && !isNaN(s.duration)) ? fmt(s.duration) : '--:--';
       const thumb = s.artwork_url ? s.artwork_url.replace('-large', '-small') : '';
 
       el.innerHTML = `
@@ -373,9 +376,11 @@
     });
   });
 
+  // Whenever a track starts playing, SoundCloud hydrates its full metadata
   widget.bind(SC.Widget.Events.PLAY, () => {
     document.getElementById('icon-play').style.display = 'none';
     document.getElementById('icon-pause').style.display = 'block';
+    
     widget.getCurrentSoundIndex(i => { 
       currentIndex = i; 
       widget.getCurrentSound(sound => {
