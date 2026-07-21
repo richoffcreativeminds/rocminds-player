@@ -167,9 +167,7 @@
     <div class="loading-text">Loading...</div>
   </div>
 
-  <iframe id="sc-iframe"
-    src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/rich-off-creative-minds/want-what-i-want-gunna-remix&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false&callback=true">
-  </iframe>
+  <iframe id="sc-iframe" src=""></iframe>
 
   <div class="art-hero">
     <img id="art-img" src="" alt="Album Art">
@@ -213,7 +211,14 @@
 
 <script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
+  // 1. Get URL parameters dynamically
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetTrackUrl = urlParams.get('url') || "https://soundcloud.com/rich-off-creative-minds/want-what-i-want-gunna-remix";
+
+  // 2. Set the dynamic iframe src before initializing widget
   const iframe = document.getElementById('sc-iframe');
+  iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(targetTrackUrl)}&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false&callback=true`;
+
   const widget = SC.Widget(iframe);
   let duration = 0, tracks = [], currentIndex = 0;
 
@@ -238,6 +243,12 @@
   function buildList(sounds) {
     const list = document.getElementById('track-list');
     list.innerHTML = '';
+    // Hide track list if it's only a single track
+    if (sounds.length <= 1) {
+      list.style.display = 'none';
+      return;
+    }
+    list.style.display = 'block';
     sounds.forEach((s, i) => {
       const el = document.createElement('div');
       el.className = 'track-item' + (i === 0 ? ' active' : '');
@@ -254,7 +265,12 @@
   widget.bind(SC.Widget.Events.READY, () => {
     widget.getSounds(sounds => {
       tracks = sounds;
-      if (sounds.length) { buildList(sounds); updateUI(sounds[0]); }
+      if (sounds && sounds.length) { 
+        buildList(sounds); 
+        updateUI(sounds[0]); 
+      } else {
+        widget.getCurrentSound(sound => { if (sound) updateUI(sound); });
+      }
       document.getElementById('loading').style.display = 'none';
     });
   });
