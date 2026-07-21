@@ -211,14 +211,23 @@
 
 <script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
-  // 1. Get URL parameters dynamically
+ // 1. Get URL parameters dynamically & safely decode
   const urlParams = new URLSearchParams(window.location.search);
-  const targetTrackUrl = urlParams.get('url') || "https://soundcloud.com/rich-off-creative-minds/want-what-i-want-gunna-remix";
+  const rawParam = urlParams.get('url');
+  
+  // Safely decode if encoded, or use as-is if already raw
+  let targetTrackUrl = "https://soundcloud.com/rich-off-creative-minds/want-what-i-want-gunna-remix";
+  if (rawParam) {
+    try {
+      targetTrackUrl = decodeURIComponent(rawParam);
+    } catch(e) {
+      targetTrackUrl = rawParam;
+    }
+  }
 
   // 2. Set the dynamic iframe src before initializing widget
   const iframe = document.getElementById('sc-iframe');
   iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(targetTrackUrl)}&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false&callback=true`;
-
   const widget = SC.Widget(iframe);
   let duration = 0, tracks = [], currentIndex = 0;
 
