@@ -6,7 +6,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   html, body {
-    background: #000 !important;
+    background: transparent !important;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
     color: #fff;
     width: 100%; height: 100%;
@@ -20,24 +20,7 @@
     width: 100%;
     height: 100vh;
     overflow: hidden;
-    background: #3a2f28;
-  }
-
-  /* Ambient blurred backdrop, sits behind everything, never used at full sharpness */
-  .bg-blur {
-    position: absolute;
-    top: -12%; left: -12%;
-    width: 124%; height: 124%;
-    background-size: cover;
-    background-position: center;
-    filter: blur(60px) brightness(0.55) saturate(1.3);
-    transform: scale(1.05);
-    z-index: 0;
-  }
-  .bg-shade {
-    position: absolute; inset: 0;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.85) 100%);
-    z-index: 1;
+    background: transparent;
   }
 
   .content {
@@ -238,7 +221,7 @@
 
   .loading-overlay {
     position: absolute; inset: 0;
-    background: #0a0a0a;
+    background: transparent;
     display: flex; align-items: center; justify-content: center;
     z-index: 10; flex-direction: column; gap: 12px;
   }
@@ -256,9 +239,6 @@
   </div>
 
   <iframe id="sc-iframe" src=""></iframe>
-
-  <div class="bg-blur" id="bg-blur"></div>
-  <div class="bg-shade"></div>
 
   <div class="content">
     <div class="drag-handle"><span></span></div>
@@ -378,7 +358,6 @@
     if (sound.artwork_url) {
       const hi = highResArt(sound.artwork_url);
       document.getElementById('art-img').src = hi;
-      document.getElementById('bg-blur').style.backgroundImage = `url(${hi})`;
     }
     duration = sound.duration || 0;
     document.querySelectorAll('.track-item').forEach((el, i) => {
