@@ -32,16 +32,6 @@
     padding: 14px 22px 22px;
   }
 
-  .drag-handle {
-    display: flex; justify-content: center;
-    padding: 4px 0 10px;
-    flex-shrink: 0;
-  }
-  .drag-handle span {
-    width: 36px; height: 5px; border-radius: 3px;
-    background: rgba(255,255,255,0.35);
-  }
-
   /* Artwork — contained, never upscaled past native resolution */
   .art-wrap {
     flex: 1;
@@ -83,20 +73,17 @@
   .title-text { min-width: 0; flex: 1; }
 
   .track-title {
-    font-size: 21px; font-weight: 700;
-    letter-spacing: -0.2px; line-height: 1.25;
+    font-size: 27px; font-weight: 700;
+    letter-spacing: -0.3px; line-height: 1.25;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
   .track-artist {
-    font-size: 14px; color: rgba(255,255,255,0.65);
-    margin-top: 3px;
+    font-size: 18px; font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    margin-top: 4px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-
-  .title-icons { display: flex; gap: 14px; flex-shrink: 0; padding-top: 2px; }
-  .title-icons .icon-btn { padding: 2px; opacity: 0.85; }
-  .title-icons .icon-btn.active { color: #fa2138; opacity: 1; }
 
   .icon-btn {
     background: none; border: none; cursor: pointer;
@@ -241,8 +228,6 @@
   <iframe id="sc-iframe" src=""></iframe>
 
   <div class="content">
-    <div class="drag-handle"><span></span></div>
-
     <div class="art-wrap">
       <div class="art-card">
         <img id="art-img" src="" alt="Album Art">
@@ -253,14 +238,6 @@
       <div class="title-text">
         <div class="track-title" id="track-title">Loading...</div>
         <div class="track-artist" id="track-artist">ROCMINDS</div>
-      </div>
-      <div class="title-icons">
-        <button class="icon-btn" id="btn-star" aria-label="Favorite">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        </button>
-        <button class="icon-btn" id="btn-more" aria-label="More">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-        </button>
       </div>
     </div>
 
@@ -276,14 +253,14 @@
 
     <div class="transport">
       <button class="ctrl-btn" id="btn-prev" aria-label="Previous">
-        <svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
       </button>
       <button class="ctrl-btn" id="btn-play" aria-label="Play/Pause">
-        <svg id="icon-play" width="52" height="52" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        <svg id="icon-pause" width="52" height="52" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        <svg id="icon-play" width="60" height="60" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="icon-pause" width="60" height="60" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
       </button>
       <button class="ctrl-btn" id="btn-next" aria-label="Next">
-        <svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18 14.5 12 6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18 14.5 12 6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
       </button>
     </div>
 
@@ -296,18 +273,6 @@
       </div>
       <button class="icon-btn" id="btn-vol-max" aria-label="Volume">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2A4.5 4.5 0 0 0 14 7.97v8.05A4.48 4.48 0 0 0 16.5 12z"/></svg>
-      </button>
-    </div>
-
-    <div class="bottom-row">
-      <button class="icon-btn" id="btn-lyrics" aria-label="Lyrics">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      </button>
-      <button class="icon-btn" id="btn-cast" aria-label="Devices">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a9 9 0 0 1 9 9"/><path d="M2 4a14 14 0 0 1 14 14"/><circle cx="4" cy="18" r="1.6" fill="currentColor" stroke="none"/></svg>
-      </button>
-      <button class="icon-btn" id="btn-queue" aria-label="Queue">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
       </button>
     </div>
   </div>
@@ -378,7 +343,6 @@
     const list = document.getElementById('track-list');
     list.innerHTML = '';
     if (!sounds || sounds.length <= 1) {
-      document.getElementById('btn-queue').style.display = 'none';
       return;
     }
     tracks = sounds;
@@ -466,17 +430,9 @@
     volFill.style.width = muted ? '0%' : lastVolume + '%';
   });
 
-  // Favorite toggle (visual only — SoundCloud's public widget API has no account-level like action)
-  document.getElementById('btn-star').addEventListener('click', function() {
-    this.classList.toggle('active');
-  });
-
-  // Track list drawer
+  // Track list drawer (closes via drag handle; opens automatically not wired to a button anymore)
   const drawer = document.getElementById('track-drawer');
-  function openDrawer() { drawer.classList.add('open'); }
   function closeDrawer() { drawer.classList.remove('open'); }
-  document.getElementById('btn-queue').addEventListener('click', openDrawer);
-  document.getElementById('btn-lyrics').addEventListener('click', openDrawer);
   document.getElementById('drawer-close').addEventListener('click', closeDrawer);
 </script>
 </body>
