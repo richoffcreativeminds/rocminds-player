@@ -3,224 +3,246 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
   html, body {
-    background: transparent !important;
+    background: #000 !important;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
     color: #fff;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
+    width: 100%; height: 100%;
     overflow: hidden;
-  }
-  
-  .player {
-    width: 100%;
-    height: 100vh;
-    background: #000 !important;
-    border-radius: 0;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-  }
-  
-  #sc-iframe {
-    width: 1px; height: 1px;
-    position: absolute; opacity: 0; pointer-events: none;
-  }
-  
-  /* Artwork sits as an absolute full-screen background */
-  .art-hero {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #000;
-    z-index: 1;
-  }
-  
-  .art-hero img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    object-position: center !important;
-    display: block !important;
-    transition: opacity 0.4s;
   }
 
-  /* Smooth Gradient Fade over Artwork */
-  .controls-container {
+  #sc-iframe { width: 1px; height: 1px; position: absolute; opacity: 0; pointer-events: none; }
+
+  .player {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: #3a2f28;
+  }
+
+  /* Ambient blurred backdrop, sits behind everything, never used at full sharpness */
+  .bg-blur {
+    position: absolute;
+    top: -12%; left: -12%;
+    width: 124%; height: 124%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(60px) brightness(0.55) saturate(1.3);
+    transform: scale(1.05);
+    z-index: 0;
+  }
+  .bg-shade {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.85) 100%);
+    z-index: 1;
+  }
+
+  .content {
     position: relative;
     z-index: 2;
-    width: 100%;
-    padding-top: 60px;
-    padding-bottom: 24px;
-    background: linear-gradient(
-      to bottom, 
-      rgba(0, 0, 0, 0) 0%, 
-      rgba(0, 0, 0, 0.25) 20%, 
-      rgba(0, 0, 0, 0.65) 50%, 
-      rgba(0, 0, 0, 0.9) 80%,
-      rgba(0, 0, 0, 0.98) 100%
-    );
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    mask-image: linear-gradient(to bottom, transparent 0%, black 25%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 22px 22px;
   }
-  
-  .art-hero-text {
-    position: relative;
-    z-index: 3;
-    padding: 0 20px 12px;
-  }
-  
-  .track-title {
-    font-size: 20px; font-weight: 700;
-    letter-spacing: -0.3px; line-height: 1.2;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  }
-  
-  .track-artist {
-    font-size: 13px; color: rgba(255,255,255,0.7);
-    margin-top: 4px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-  }
-  
-  .progress-section { 
-    padding: 8px 20px 0; 
+
+  .drag-handle {
+    display: flex; justify-content: center;
+    padding: 4px 0 10px;
     flex-shrink: 0;
-    position: relative;
-    z-index: 3;
   }
-  
+  .drag-handle span {
+    width: 36px; height: 5px; border-radius: 3px;
+    background: rgba(255,255,255,0.35);
+  }
+
+  /* Artwork — contained, never upscaled past native resolution */
+  .art-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 6px 0 8px;
+  }
+
+  .art-card {
+    width: min(82vw, 420px);
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #1a1a1a;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.5);
+  }
+
+  .art-card img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+    background: #111;
+  }
+
+  /* Title row */
+  .title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 2px 0;
+    flex-shrink: 0;
+  }
+
+  .title-text { min-width: 0; flex: 1; }
+
+  .track-title {
+    font-size: 21px; font-weight: 700;
+    letter-spacing: -0.2px; line-height: 1.25;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .track-artist {
+    font-size: 14px; color: rgba(255,255,255,0.65);
+    margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .title-icons { display: flex; gap: 14px; flex-shrink: 0; padding-top: 2px; }
+  .title-icons .icon-btn { padding: 2px; opacity: 0.85; }
+  .title-icons .icon-btn.active { color: #fa2138; opacity: 1; }
+
+  .icon-btn {
+    background: none; border: none; cursor: pointer;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .icon-btn:active { transform: scale(0.9); }
+
+  /* Progress */
+  .progress-section { padding: 18px 2px 0; flex-shrink: 0; }
+
   .progress-bar-wrap {
-    width: 100%; height: 3px;
-    background: rgba(255,255,255,0.25);
+    width: 100%; height: 4px;
+    background: rgba(255,255,255,0.28);
     border-radius: 2px; cursor: pointer; position: relative;
   }
-  
   .progress-fill {
-    height: 100%; background: #1a7a3a;
+    height: 100%; background: #fff;
     border-radius: 2px; width: 0%;
-    transition: width 0.5s linear; position: relative;
+    position: relative;
   }
-  
   .progress-fill::after {
     content: '';
-    position: absolute; right: -5px; top: -4px;
-    width: 11px; height: 11px;
+    position: absolute; right: -6px; top: -4px;
+    width: 12px; height: 12px;
     background: #fff; border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
   }
-  
+
   .time-row {
-    display: flex; justify-content: space-between;
+    display: flex; justify-content: space-between; align-items: center;
     margin-top: 8px;
-    font-size: 11px; color: rgba(255,255,255,0.6);
+    font-size: 12px; color: rgba(255,255,255,0.6);
     font-variant-numeric: tabular-nums;
   }
-  
-  .controls {
+  .time-row .center-label {
+    font-size: 12px; color: rgba(255,255,255,0.5);
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Transport */
+  .transport {
     display: flex; align-items: center;
     justify-content: space-between;
-    padding: 12px 32px 8px;
+    padding: 18px 6px 0;
     flex-shrink: 0;
-    position: relative;
-    z-index: 3;
   }
-  
+
   .ctrl-btn {
     background: none; border: none; cursor: pointer;
-    color: rgba(255,255,255,0.85);
+    color: #fff;
     display: flex; align-items: center; justify-content: center;
-    transition: color 0.2s, transform 0.1s; padding: 8px;
+    transition: transform 0.1s; padding: 8px;
   }
-  
-  .ctrl-btn:hover { color: #fff; }
-  .ctrl-btn:active { transform: scale(0.9); }
-  
-  .ctrl-btn.play-pause {
-    width: 56px; height: 56px;
-    background: #fff; border-radius: 50%;
-    color: #000;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  }
-  
-  .ctrl-btn.play-pause:hover { background: #eee; color: #000; }
-  
-  .track-list {
-    border-top: none !important;
-    max-height: 150px; overflow-y: auto;
-    scrollbar-width: none;
+  .ctrl-btn:active { transform: scale(0.88); }
+
+  /* Volume */
+  .volume-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 20px 2px 0;
     flex-shrink: 0;
+  }
+  .volume-row .icon-btn { opacity: 0.6; flex-shrink: 0; }
+  .volume-slider {
+    flex: 1; height: 4px; border-radius: 2px;
+    background: rgba(255,255,255,0.28);
+    position: relative; cursor: pointer;
+  }
+  .volume-fill {
+    height: 100%; width: 100%; border-radius: 2px;
+    background: rgba(255,255,255,0.85);
     position: relative;
-    z-index: 3;
   }
-  
-  .track-list::-webkit-scrollbar { display: none; }
-  
-  .track-item {
+  .volume-fill::after {
+    content: '';
+    position: absolute; right: -5px; top: -3px;
+    width: 10px; height: 10px;
+    background: #fff; border-radius: 50%;
+  }
+
+  /* Bottom icon row */
+  .bottom-row {
     display: flex; align-items: center;
-    padding: 10px 20px; gap: 12px;
-    cursor: pointer; transition: background 0.15s;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    justify-content: space-between;
+    padding: 22px 8px 4px;
+    flex-shrink: 0;
   }
-  
+  .bottom-row .icon-btn { opacity: 0.75; padding: 6px; }
+  .bottom-row .icon-btn.active { opacity: 1; color: #fa2138; }
+
+  /* Track list drawer */
+  .track-list-drawer {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    max-height: 60%;
+    background: rgba(12,10,9,0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 5;
+    display: flex; flex-direction: column;
+  }
+  .track-list-drawer.open { transform: translateY(0); }
+  .drawer-handle { display: flex; justify-content: center; padding: 10px 0 4px; cursor: pointer; }
+  .drawer-handle span { width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.3); }
+  .drawer-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 20px 8px; }
+  .track-list { overflow-y: auto; scrollbar-width: none; padding-bottom: 10px; }
+  .track-list::-webkit-scrollbar { display: none; }
+  .track-item { display: flex; align-items: center; padding: 10px 20px; gap: 12px; cursor: pointer; transition: background 0.15s; }
   .track-item:hover { background: rgba(255,255,255,0.08); }
-  .track-item.active { background: rgba(26,122,58,0.2); }
-  
-  .track-num {
-    font-size: 12px; color: rgba(255,255,255,0.5);
-    width: 18px; text-align: center; flex-shrink: 0;
-  }
-  
-  .track-item.active .track-num { color: #23a04c; }
-  
-  .track-thumb {
-    width: 36px; height: 36px;
-    border-radius: 4px; object-fit: cover;
-    background: #222; flex-shrink: 0;
-  }
-  
+  .track-item.active .track-name { color: #fa2138; }
+  .track-num { font-size: 12px; color: rgba(255,255,255,0.5); width: 18px; text-align: center; flex-shrink: 0; }
+  .track-item.active .track-num { color: #fa2138; }
+  .track-thumb { width: 38px; height: 38px; border-radius: 5px; object-fit: cover; background: #222; flex-shrink: 0; }
   .track-info { flex: 1; min-width: 0; }
-  
-  .track-name {
-    font-size: 13px; font-weight: 500;
-    white-space: nowrap; overflow: hidden;
-    text-overflow: ellipsis; color: #fff;
-  }
-  
-  .track-item.active .track-name { color: #23a04c; }
-  
-  .track-dur {
-    font-size: 11px; color: rgba(255,255,255,0.5);
-    flex-shrink: 0; font-variant-numeric: tabular-nums;
-  }
-  
+  .track-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+  .track-dur { font-size: 11px; color: rgba(255,255,255,0.5); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
   .loading-overlay {
     position: absolute; inset: 0;
     background: #0a0a0a;
     display: flex; align-items: center; justify-content: center;
     z-index: 10; flex-direction: column; gap: 12px;
   }
-  
-  .loading-dot {
-    width: 8px; height: 8px;
-    background: #1a7a3a; border-radius: 50%;
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 0.2; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.2); }
-  }
-  
+  .loading-dot { width: 8px; height: 8px; background: #fa2138; border-radius: 50%; animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
   .loading-text { font-size: 12px; color: rgba(255,255,255,0.4); }
 </style>
 </head>
@@ -234,14 +256,31 @@
 
   <iframe id="sc-iframe" src=""></iframe>
 
-  <div class="art-hero">
-    <img id="art-img" src="" alt="Album Art">
-  </div>
+  <div class="bg-blur" id="bg-blur"></div>
+  <div class="bg-shade"></div>
 
-  <div class="controls-container">
-    <div class="art-hero-text">
-      <div class="track-title" id="track-title">Loading...</div>
-      <div class="track-artist" id="track-artist">ROCMINDS</div>
+  <div class="content">
+    <div class="drag-handle"><span></span></div>
+
+    <div class="art-wrap">
+      <div class="art-card">
+        <img id="art-img" src="" alt="Album Art">
+      </div>
+    </div>
+
+    <div class="title-row">
+      <div class="title-text">
+        <div class="track-title" id="track-title">Loading...</div>
+        <div class="track-artist" id="track-artist">ROCMINDS</div>
+      </div>
+      <div class="title-icons">
+        <button class="icon-btn" id="btn-star" aria-label="Favorite">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-more" aria-label="More">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="progress-section">
@@ -250,23 +289,51 @@
       </div>
       <div class="time-row">
         <span id="time-current">0:00</span>
-        <span id="time-total">0:00</span>
+        <span id="time-remaining">-0:00</span>
       </div>
     </div>
 
-    <div class="controls">
-      <button class="ctrl-btn" id="btn-prev">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+    <div class="transport">
+      <button class="ctrl-btn" id="btn-prev" aria-label="Previous">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
       </button>
-      <button class="ctrl-btn play-pause" id="btn-play">
-        <svg id="icon-play" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        <svg id="icon-pause" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      <button class="ctrl-btn" id="btn-play" aria-label="Play/Pause">
+        <svg id="icon-play" width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="icon-pause" width="44" height="44" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
       </button>
-      <button class="ctrl-btn" id="btn-next">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18 14.5 12 6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+      <button class="ctrl-btn" id="btn-next" aria-label="Next">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18 14.5 12 6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
       </button>
     </div>
 
+    <div class="volume-row">
+      <button class="icon-btn" id="btn-mute" aria-label="Mute">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10H3z"/></svg>
+      </button>
+      <div class="volume-slider" id="volume-wrap">
+        <div class="volume-fill" id="volume-fill"></div>
+      </div>
+      <button class="icon-btn" id="btn-vol-max" aria-label="Volume">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2A4.5 4.5 0 0 0 14 7.97v8.05A4.48 4.48 0 0 0 16.5 12z"/></svg>
+      </button>
+    </div>
+
+    <div class="bottom-row">
+      <button class="icon-btn" id="btn-lyrics" aria-label="Lyrics">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-cast" aria-label="Devices">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a9 9 0 0 1 9 9"/><path d="M2 4a14 14 0 0 1 14 14"/><circle cx="4" cy="18" r="1.6" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-queue" aria-label="Queue">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="track-list-drawer" id="track-drawer">
+    <div class="drawer-handle" id="drawer-close"><span></span></div>
+    <div class="drawer-title">Up next</div>
     <div class="track-list" id="track-list"></div>
   </div>
 </div>
@@ -284,12 +351,21 @@
   iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(targetUrl)}&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false`;
 
   const widget = SC.Widget(iframe);
-  let duration = 0, tracks = [], currentIndex = 0;
+  let duration = 0, tracks = [], currentIndex = 0, muted = false, lastVolume = 100;
 
   function fmt(ms) {
     if (!ms || isNaN(ms)) return '0:00';
     const s = Math.floor(ms / 1000);
     return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60);
+  }
+  function fmtRemaining(ms) {
+    if (!ms || isNaN(ms)) return '-0:00';
+    return '-' + fmt(ms);
+  }
+
+  // Highest-resolution artwork SoundCloud serves, shown contained (never upscaled/blurred)
+  function highResArt(url) {
+    return url.replace('-large', '-t500x500');
   }
 
   function updateUI(sound) {
@@ -299,12 +375,11 @@
     }
     document.getElementById('track-artist').textContent = sound.user?.username || 'ROCMINDS';
     if (sound.artwork_url) {
-      document.getElementById('art-img').src = sound.artwork_url.replace('-large', '-t500x500');
+      const hi = highResArt(sound.artwork_url);
+      document.getElementById('art-img').src = hi;
+      document.getElementById('bg-blur').style.backgroundImage = `url(${hi})`;
     }
     duration = sound.duration || 0;
-    if (duration > 0) {
-      document.getElementById('time-total').textContent = fmt(duration);
-    }
     document.querySelectorAll('.track-item').forEach((el, i) => {
       el.classList.toggle('active', i === currentIndex);
     });
@@ -313,49 +388,37 @@
   function updateTrackRow(i, sound) {
     const row = document.getElementById(`track-item-${i}`);
     if (row && sound) {
-      if (sound.title && sound.title !== 'undefined') {
-        row.querySelector('.track-name').textContent = sound.title;
-      }
-      if (sound.duration && !isNaN(sound.duration)) {
-        row.querySelector('.track-dur').textContent = fmt(sound.duration);
-      }
-      if (sound.artwork_url) {
-        row.querySelector('.track-thumb').src = sound.artwork_url.replace('-large', '-small');
-      }
+      if (sound.title && sound.title !== 'undefined') row.querySelector('.track-name').textContent = sound.title;
+      if (sound.duration && !isNaN(sound.duration)) row.querySelector('.track-dur').textContent = fmt(sound.duration);
+      if (sound.artwork_url) row.querySelector('.track-thumb').src = sound.artwork_url.replace('-large', '-small');
     }
   }
 
   function buildList(sounds) {
     const list = document.getElementById('track-list');
     list.innerHTML = '';
-
     if (!sounds || sounds.length <= 1) {
-      list.style.display = 'none';
+      document.getElementById('btn-queue').style.display = 'none';
       return;
     }
-
-    list.style.display = 'block';
     tracks = sounds;
-
     sounds.forEach((s, i) => {
       const el = document.createElement('div');
       el.className = 'track-item' + (i === currentIndex ? ' active' : '');
       el.id = `track-item-${i}`;
-      
       const title = (s.title && s.title !== 'undefined') ? s.title : 'Loading track...';
       const dur = (s.duration && !isNaN(s.duration)) ? fmt(s.duration) : '--:--';
       const thumb = s.artwork_url ? s.artwork_url.replace('-large', '-small') : '';
-
       el.innerHTML = `
         <span class="track-num">${i + 1}</span>
         <img class="track-thumb" src="${thumb}" alt="">
         <div class="track-info"><div class="track-name">${title}</div></div>
         <span class="track-dur">${dur}</span>`;
-
-      el.addEventListener('click', () => { 
+      el.addEventListener('click', () => {
         currentIndex = i;
-        widget.skip(i); 
-        widget.play(); 
+        widget.skip(i);
+        widget.play();
+        closeDrawer();
       });
       list.appendChild(el);
     });
@@ -368,21 +431,16 @@
         document.getElementById('loading').style.display = 'none';
       }
     });
-
     widget.getSounds(sounds => {
-      if (sounds && sounds.length > 1) {
-        buildList(sounds);
-      }
+      if (sounds && sounds.length > 1) buildList(sounds);
     });
   });
 
-  // Whenever a track starts playing, SoundCloud hydrates its full metadata
   widget.bind(SC.Widget.Events.PLAY, () => {
     document.getElementById('icon-play').style.display = 'none';
     document.getElementById('icon-pause').style.display = 'block';
-    
-    widget.getCurrentSoundIndex(i => { 
-      currentIndex = i; 
+    widget.getCurrentSoundIndex(i => {
+      currentIndex = i;
       widget.getCurrentSound(sound => {
         if (sound) {
           tracks[i] = sound;
@@ -402,6 +460,7 @@
     const pct = duration > 0 ? (e.currentPosition / duration) * 100 : 0;
     document.getElementById('progress-fill').style.width = pct + '%';
     document.getElementById('time-current').textContent = fmt(e.currentPosition);
+    document.getElementById('time-remaining').textContent = fmtRemaining(duration - e.currentPosition);
   });
 
   document.getElementById('btn-play').addEventListener('click', () => widget.toggle());
@@ -411,6 +470,34 @@
     const r = e.currentTarget.getBoundingClientRect();
     widget.seekTo(((e.clientX - r.left) / r.width) * duration);
   });
+
+  // Volume
+  const volFill = document.getElementById('volume-fill');
+  document.getElementById('volume-wrap').addEventListener('click', e => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    widget.setVolume(pct * 100);
+    volFill.style.width = (pct * 100) + '%';
+    muted = pct === 0;
+  });
+  document.getElementById('btn-mute').addEventListener('click', () => {
+    muted = !muted;
+    widget.setVolume(muted ? 0 : lastVolume);
+    volFill.style.width = muted ? '0%' : lastVolume + '%';
+  });
+
+  // Favorite toggle (visual only — SoundCloud's public widget API has no account-level like action)
+  document.getElementById('btn-star').addEventListener('click', function() {
+    this.classList.toggle('active');
+  });
+
+  // Track list drawer
+  const drawer = document.getElementById('track-drawer');
+  function openDrawer() { drawer.classList.add('open'); }
+  function closeDrawer() { drawer.classList.remove('open'); }
+  document.getElementById('btn-queue').addEventListener('click', openDrawer);
+  document.getElementById('btn-lyrics').addEventListener('click', openDrawer);
+  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
 </script>
 </body>
 </html>
