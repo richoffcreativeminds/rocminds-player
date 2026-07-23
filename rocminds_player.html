@@ -63,14 +63,14 @@
   .art-wrap {
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     min-height: 0;
-    padding: 6px 0 8px;
+    padding: 0 0 8px;
   }
 
   .art-card {
-    width: min(82vw, 420px);
+    width: min(68vw, 340px);
     aspect-ratio: 1 / 1;
     border-radius: 10px;
     overflow: hidden;
@@ -157,7 +157,8 @@
   /* Transport */
   .transport {
     display: flex; align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 34px;
     padding: 18px 6px 0;
     flex-shrink: 0;
   }
@@ -295,14 +296,14 @@
 
     <div class="transport">
       <button class="ctrl-btn" id="btn-prev" aria-label="Previous">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
       </button>
       <button class="ctrl-btn" id="btn-play" aria-label="Play/Pause">
-        <svg id="icon-play" width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        <svg id="icon-pause" width="44" height="44" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        <svg id="icon-play" width="52" height="52" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="icon-pause" width="52" height="52" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
       </button>
       <button class="ctrl-btn" id="btn-next" aria-label="Next">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18 14.5 12 6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18 14.5 12 6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
       </button>
     </div>
 
